@@ -3,7 +3,7 @@ const express = require('express');
 const http = require('http');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path');
+// const path = require('path');
 require('dotenv').config();
 
 const User = require('./models/User');
@@ -20,8 +20,8 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// app.use(express.static('public'));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('public'));
+// app.use(express.static(path.join(__dirname, 'public')));
 
 
 // ✅ MongoDB connection
