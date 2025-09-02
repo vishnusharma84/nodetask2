@@ -68,7 +68,7 @@ app.post('/login', async (req, res) => {
 });
 
 // REGISTER ROUTE
-app.post('/users', async (req, res) => {
+app.post('/', async (req, res) => {
   try {
     // sanitize + trim inputs
     const firstName = (req.body.firstName || '').trim();
