@@ -5,7 +5,7 @@
   <title>Login</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <!-- ✅ सही socket.io client import -->
+  
   <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
@@ -55,17 +55,16 @@
       toggleIcon.textContent = "👁️"; // eye open
     }
   }
-  // ✅ Global socket create
+
   const socket = io();
 
-  // Function: load page dynamically + attach script
   async function loadPage(url, scriptFile) {
     try {
       const res = await fetch(url);
       const html = await res.text();
       document.body.innerHTML = html;
 
-      // ✅ agar script file pass ki gayi hai to usko load karo
+    
       if (scriptFile) {
         const script = document.createElement("script");
         script.src = scriptFile;
@@ -96,14 +95,12 @@
       if (data.success) {
         alert("Login Successful ✅");
 
-        // ✅ Save user
+  
         localStorage.setItem("user", JSON.stringify(data.user));
-//  localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("loggedInViaLogin", "true");
-        // ✅ Socket join
+
         socket.emit("join_live_users", data.user);
 
-        // ✅ Load view.html + view.js bina refresh
         await loadPage("view.html", "view.js");
 
       } else {

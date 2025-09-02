@@ -1,11 +1,11 @@
 $(document).ready(function () {
-  const socket = window.socket || io(); // global socket reuse
+  const socket = window.socket || io(); 
   const $tbody = $("#usersTable tbody");
 
   let allUsers = [];
   let liveUsers = {};
 
-  // 🔹 Fetch all users
+  // Fetch all users
   function fetchUsers() {
     $.get("/users", function (res) {
       if (res.success) {
@@ -15,7 +15,7 @@ $(document).ready(function () {
     });
   }
 
-  // 🔹 Render users in table
+  // Render users in table
   function renderUsers() {
     $tbody.empty();
     allUsers.forEach(user => {
@@ -38,7 +38,7 @@ $(document).ready(function () {
     });
   }
 
-  // 🔹 Listen live users update
+  // Listen live users update
   socket.on("live_users_update", users => {
     liveUsers = {};
     users.forEach(u => {
@@ -47,30 +47,26 @@ $(document).ready(function () {
     renderUsers();
   });
 
-  // 🔹 When new user created
   socket.on("user_created_db", user => {
     allUsers.push(user);
     renderUsers();
   });
 
-  // 🔹 Viewer join
   socket.emit("viewer_join");
 
-  // 🔹 Logout
+  //  Logout
   $("#logoutBtn").click(() => {
     socket.emit("logout");
     localStorage.removeItem("user");
     location.reload(); // back to login
   });
 
-  // 🔹 On load, fetch users
   fetchUsers();
 });
   const loggedInViaLogin = localStorage.getItem("loggedInViaLogin");
   const $logoutBtn = $("#logoutBtn");
   if (loggedInViaLogin === "true") $logoutBtn.show();
 
-  // 🔹 Logout button click
   $logoutBtn.click(() => {
     localStorage.removeItem("loggedInViaLogin");
     localStorage.removeItem("user");

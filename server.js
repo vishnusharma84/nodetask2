@@ -39,7 +39,6 @@ const liveUsers = new Map();
 
 // ------------------- ROUTES ------------------- //
 
-// LOGIN ROUTE
 app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -70,7 +69,6 @@ app.post('/login', async (req, res) => {
 // REGISTER ROUTE
 app.post('/users', async (req, res) => {
   try {
-    // sanitize + trim inputs
     const firstName = (req.body.firstName || '').trim();
     const lastName = (req.body.lastName || '').trim();
     const mobile = (req.body.mobile || '').trim();
@@ -138,7 +136,7 @@ app.post('/users', async (req, res) => {
 
     const saved = await user.save();
     const userObj = saved.toObject();
-    delete userObj.password; // don't expose password
+    delete userObj.password; 
 
     // notify viewers / live pages in 'live users' room that a DB user was created
     io.to('live users').emit('user_created_db', {
@@ -152,7 +150,7 @@ app.post('/users', async (req, res) => {
     res.status(201).json({ success: true, message: 'User saved', user: userObj });
   } catch (err) {
     console.error('POST /users error', err);
-    // if duplicate key error (just in case)
+
     if (err.code === 11000) {
       return res.status(400).json({ success: false, message: 'Duplicate key error' });
     }

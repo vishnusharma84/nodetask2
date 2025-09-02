@@ -25,7 +25,7 @@
           </span>
         </div>
       <div class="btngroup">
-      <!-- <button  id="BTN" type="submit">Save</button> -->
+    
       <button id="saveBtn" type="submit">Save</button>
 
       <button id="BTN" > <a href="view.html" onclick="">View All Users</a></button>
@@ -36,10 +36,8 @@
     
    
   </div>
-<!-- Add this in your head if not already there -->
-<script src="/socket.io/socket.io.js"></script>
 
-<!-- Your original form stays the same -->
+<script src="/socket.io/socket.io.js"></script>
 
 <script>
    function togglePassword() {
@@ -88,7 +86,6 @@ async function loadPage(url, scriptFile) {
       const html = await res.text();
       document.body.innerHTML = html;
 
-      // ✅ agar script file pass ki gayi hai to usko load karo
       if (scriptFile) {
         const script = document.createElement("script");
         script.src = scriptFile;
@@ -99,7 +96,7 @@ async function loadPage(url, scriptFile) {
       alert("Failed to load page: " + err.message);
     }
   }
-    // const view=    await loadPage("view.html", "view.js");
+
     document.getElementById("BTN").addEventListener("click", function(e){
   e.preventDefault();
   loadPage("view.html", "view.js"); // view.html load + view.js execute
