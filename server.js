@@ -20,7 +20,9 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// app.use(express.static('public'));
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 // ✅ MongoDB connection
 const mongoUri = process.env.MONGO_URL;
@@ -68,22 +70,64 @@ app.post('/login', async (req, res) => {
 // REGISTER ROUTE
 app.post('/users', async (req, res) => {
   try {
-    const { firstName, lastName, mobile, email, street, city, state, country, loginId, password } = req.body;
+    // sanitize + trim inputs
+    const firstName = (req.body.firstName || '').trim();
+    const lastName = (req.body.lastName || '').trim();
+    const mobile = (req.body.mobile || '').trim();
+    const email = (req.body.email || '').trim().toLowerCase();
+    const street = (req.body.street || '').trim();
+    const city = (req.body.city || '').trim();
+    const state = (req.body.state || '').trim();
+    const country = (req.body.country || '').trim();
+    const loginId = (req.body.loginId || '').trim();
+    const password = (req.body.password || '').trim();
 
-    if (!firstName || !lastName || !email) {
-      return res.status(400).json({ success: false, message: 'Missing required fields' });
-    }
+    // regex validators
+    const nameRegex = /^[A-Za-z]+$/;
+    const mobileRegex = /^[0-9]{10}$/;
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    const loginRegex = /^[A-Za-z0-9]{8}$/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{6,}$/;
+    const streetRegex = /^[A-Za-z0-9\s,.-]+$/;
+    const cityStateCountryRegex = /^[A-Za-z\s]+$/;
 
-    const exists = await User.findOne({ $or: [{ email }, { mobile }] });
-    if (exists) {
-      return res.status(400).json({ success: false, message: 'Email or Mobile already exists' });
-    }
+    // required checks
+    if (!firstName) return res.status(400).json({ success: false, message: 'First Name is required' });
+    if (!lastName) return res.status(400).json({ success: false, message: 'Last Name is required' });
+    if (!mobile) return res.status(400).json({ success: false, message: 'Mobile is required' });
+    if (!email) return res.status(400).json({ success: false, message: 'Email is required' });
+    if (!street) return res.status(400).json({ success: false, message: 'Street is required' });
+    if (!city) return res.status(400).json({ success: false, message: 'City is required' });
+    if (!state) return res.status(400).json({ success: false, message: 'State is required' });
+    if (!country) return res.status(400).json({ success: false, message: 'Country is required' });
+    if (!loginId) return res.status(400).json({ success: false, message: 'Login ID is required' });
+    if (!password) return res.status(400).json({ success: false, message: 'Password is required' });
 
+    // format validation
+    if (!nameRegex.test(firstName)) return res.status(400).json({ success: false, message: 'First Name must contain only letters' });
+    if (!nameRegex.test(lastName)) return res.status(400).json({ success: false, message: 'Last Name must contain only letters' });
+    if (!mobileRegex.test(mobile)) return res.status(400).json({ success: false, message: 'Mobile must be 10 digits' });
+    if (!emailRegex.test(email)) return res.status(400).json({ success: false, message: 'Invalid Email format' });
+    if (!streetRegex.test(street)) return res.status(400).json({ success: false, message: 'Street can only have letters, numbers and common punctuation' });
+    if (!cityStateCountryRegex.test(city)) return res.status(400).json({ success: false, message: 'City must contain only letters' });
+    if (!cityStateCountryRegex.test(state)) return res.status(400).json({ success: false, message: 'State must contain only letters' });
+    if (!cityStateCountryRegex.test(country)) return res.status(400).json({ success: false, message: 'Country must contain only letters' });
+    if (!loginRegex.test(loginId)) return res.status(400).json({ success: false, message: 'Login ID must be exactly 8 alphanumeric characters' });
+    if (!passwordRegex.test(password)) return res.status(400).json({ success: false, message: 'Password must be 6+ chars with 1 uppercase, 1 lowercase & 1 special char' });
+
+    // uniqueness checks
+    const existsEmail = await User.findOne({ email });
+    if (existsEmail) return res.status(400).json({ success: false, message: 'Email already exists!' });
+
+    const existsMobile = await User.findOne({ mobile });
+    if (existsMobile) return res.status(400).json({ success: false, message: 'Mobile already exists!' });
+
+    // create and save user
     const user = new User({
       firstName,
       lastName,
       mobile,
-      email: email.toLowerCase().trim(),
+      email,
       street,
       city,
       state,
@@ -94,14 +138,24 @@ app.post('/users', async (req, res) => {
 
     const saved = await user.save();
     const userObj = saved.toObject();
-    delete userObj.password;
+    delete userObj.password; // don't expose password
 
-    // ✅ Notify all live viewers
-    io.to('live users').emit('user_created_db', userObj);
+    // notify viewers / live pages in 'live users' room that a DB user was created
+    io.to('live users').emit('user_created_db', {
+      email: userObj.email,
+      firstName: userObj.firstName,
+      lastName: userObj.lastName,
+      createdAt: userObj.createdAt,
+      id: userObj._id
+    });
 
     res.status(201).json({ success: true, message: 'User saved', user: userObj });
   } catch (err) {
-    console.error(err);
+    console.error('POST /users error', err);
+    // if duplicate key error (just in case)
+    if (err.code === 11000) {
+      return res.status(400).json({ success: false, message: 'Duplicate key error' });
+    }
     res.status(500).json({ success: false, message: err.message || 'Server error' });
   }
 });
