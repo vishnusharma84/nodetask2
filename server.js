@@ -161,7 +161,7 @@ app.post('/users', async (req, res) => {
 });
 
 // GET USERS
-app.get('/users', async (req, res) => {
+app.get('/', async (req, res) => {
   try {
     const users = await User.find().select('-password').lean();
     res.json({ success: true, users });
