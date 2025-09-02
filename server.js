@@ -68,7 +68,7 @@ app.post('/login', async (req, res) => {
 });
 
 // REGISTER ROUTE
-app.post('/', async (req, res) => {
+app.post('/users', async (req, res) => {
   try {
     // sanitize + trim inputs
     const firstName = (req.body.firstName || '').trim();
@@ -161,7 +161,7 @@ app.post('/', async (req, res) => {
 });
 
 // GET USERS
-app.get('/', async (req, res) => {
+app.get('/users', async (req, res) => {
   try {
     const users = await User.find().select('-password').lean();
     res.json({ success: true, users });
