@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h2>User Registration</h2>
+    <form id="userForm">
+      <input name="firstName" placeholder="First Name" required>
+      <input name="lastName" placeholder="Last Name" required>
+      <input name="mobile" placeholder="Mobile" required>
+      <input type="email" name="email" placeholder="Email" required>
+      <input name="street" placeholder="Street" required>
+      <input name="city" placeholder="City" required>
+      <input name="state" placeholder="State" required>
+      <input name="country" placeholder="Country" required>
+      <input name="loginId" placeholder="Login ID" required>
+        <div class="password-field">
+          <input type="password" id="password" name="password" required placeholder="Enter your password">
+          <span class="toggle-password" onclick="togglePassword()">
+            👁️
+          </span>
+        </div>
+      <div class="btngroup">
+      <!-- <button  id="BTN" type="submit">Save</button> -->
+      <button id="saveBtn" type="submit">Save</button>
+
+      <button id="BTN" > <a href="view.html" onclick="">View All Users</a></button>
+      </div>
+      <p id="msg">Already have an account?<a href="login.html">Login</a></p>
+    </form>
+
+    
+   
+  </div>
+<!-- Add this in your head if not already there -->
+<script src="/socket.io/socket.io.js"></script>
+
+<!-- Your original form stays the same -->
+
+<script>
+   function togglePassword() {
+  const passwordInput = document.getElementById("password");
+  const toggleIcon = document.querySelector(".toggle-password");
+  if (passwordInput.type === "password") {
+    passwordInput.type = "text";
+    toggleIcon.textContent = "🙈";
+  } else {
+    passwordInput.type = "password";
+    toggleIcon.textContent = "👁️";
+  }
+}
+
+$(function () {
+  const $form = $('#userForm');
+  const socket = io();
+
+  $form.on('submit', function (e) {
+    e.preventDefault();
+    $('#saveBtn').prop('disabled', true).text('Saving...');
+
+    const data = {};
+    $(this).serializeArray().forEach(({ name, value }) => data[name] = value.trim());
+
+    $.ajax({
+      url: '/users',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+      success(res) {
+        if (res.success) {
+          alert('Saved successfully ✅');
+          $form[0].reset();
+          socket.emit('join_live_users', { email: data.email, firstName: data.firstName, lastName: data.lastName });
+        } else alert(res.message || 'Error saving ❌');
+      },
+      error(xhr) { alert(xhr.responseJSON?.message || 'Error saving ❌'); },
+      complete() { $('#saveBtn').prop('disabled', false).text('Save'); }
+    });
+  });
+});
+async function loadPage(url, scriptFile) {
+    try {
+      const res = await fetch(url);
+      const html = await res.text();
+      document.body.innerHTML = html;
+
+      // ✅ agar script file pass ki gayi hai to usko load karo
+      if (scriptFile) {
+        const script = document.createElement("script");
+        script.src = scriptFile;
+        script.onload = () => console.log(scriptFile + " loaded ✅");
+        document.body.appendChild(script);
+      }
+    } catch (err) {
+      alert("Failed to load page: " + err.message);
+    }
+  }
+    // const view=    await loadPage("view.html", "view.js");
+    document.getElementById("BTN").addEventListener("click", function(e){
+  e.preventDefault();
+  loadPage("view.html", "view.js"); // view.html load + view.js execute
+});
+
+</script>
+
+  
+</body>
+</html>
